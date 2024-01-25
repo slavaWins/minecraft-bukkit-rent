@@ -2,6 +2,7 @@ package org.destplay.renttable;
 
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.destplay.renttable.contracts.RentModel;
+import org.destplay.renttable.helpers.VaultHelper;
 
 import java.io.File;
 import java.io.IOException;
@@ -15,12 +16,19 @@ public class ConfigHelper {
 
     public static void DefYmlConfi() {
         yamlConfiguration.set("join-mess", "Привет игрок @p");
-        yamlConfiguration.set("enabled", true);
+        yamlConfiguration.set("debug", true);
+        yamlConfiguration.set("valute", VaultHelper.GetDefualtValute());
+        yamlConfiguration.set("valute-name", "золота");
+        yamlConfiguration.set("rent-duration", 12);
+        yamlConfiguration.set("valute-view-coficient", 1);
 
         List<RentModel> listRegions = new ArrayList<>();
         yamlConfiguration.set("regions", listRegions);
     }
 
+    public static boolean IsDebug(){
+        return yamlConfiguration.getBoolean("debug", true);
+    }
 
     public static void Save(){
         try {

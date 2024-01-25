@@ -1,16 +1,12 @@
 package org.destplay.renttable;
 
-import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.destplay.renttable.contracts.RentModel;
+import org.bukkit.scheduler.BukkitRunnable;
 import org.destplay.renttable.handles.SignRentHandle;
-import org.destplay.renttable.listeners.ExampleListener;
 import org.destplay.renttable.listeners.SignListener;
 import org.destplay.renttable.repositories.RegionsRepository;
-
-import java.util.List;
 
 public final class RentTable extends JavaPlugin {
 
@@ -18,8 +14,22 @@ public final class RentTable extends JavaPlugin {
     public void onEnable() {
         ConfigHelper.Init(getDataFolder());
         RegionsRepository.Init(getDataFolder());
-        getServer().getPluginManager().registerEvents(new ExampleListener(), this);
+        //getServer().getPluginManager().registerEvents(new ExampleListener(), this);
         getServer().getPluginManager().registerEvents(new SignListener(), this);
+
+
+
+        //Запускаем Таск для чистки аренд
+        BukkitRunnable task = new BukkitRunnable() {
+            @Override
+            public void run() {
+                // Вызов функции, которую вы хотите выполнить на сервере
+                SignRentHandle.UpdateRentsAll();
+            }
+        };
+
+        // Запуск задачи с периодом в 20 секунд (другие опции также доступны)
+        task.runTaskTimer(this, 0, 60*20);
     }
 
     @Override

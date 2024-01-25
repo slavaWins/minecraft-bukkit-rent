@@ -9,18 +9,10 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.block.SignChangeEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
-import org.bukkit.inventory.ItemStack;
-import org.destplay.renttable.contracts.RentModel;
 import org.destplay.renttable.handles.SignCreateHandle;
 import org.destplay.renttable.handles.SignRentHandle;
-import org.destplay.renttable.helpers.VaultHelper;
-import org.destplay.renttable.repositories.RegionsRepository;
-
-import java.util.HashMap;
-import java.util.List;
 
 
-//minecraft:gold_ingot
 public class SignListener implements Listener {
 
 

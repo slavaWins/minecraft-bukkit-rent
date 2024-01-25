@@ -4,17 +4,56 @@ import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.destplay.renttable.ConfigHelper;
 import org.destplay.renttable.contracts.RentModel;
 import org.destplay.renttable.helpers.DateHelper;
+import org.destplay.renttable.helpers.RgClaimHelper;
 import org.destplay.renttable.helpers.VaultHelper;
 import org.destplay.renttable.repositories.RegionsRepository;
 
+import java.io.IOException;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
 public class SignRentHandle {
 
+
+
+    public static void UpdateRentsAll( ) {
+
+
+        if(ConfigHelper.IsDebug()) {
+            System.out.println(ChatColor.YELLOW + "[RENTTABLE] Запущенно выселение просроченых аренды");
+        }
+
+        boolean isUpdated = false;
+        for (int i = 0; i < RegionsRepository.Get().size(); i++) {
+            RentModel map = RegionsRepository.Get().get(i);
+            if (UpdateRent(map)) isUpdated = true;
+        }
+
+        if (isUpdated) {
+            try {
+                RegionsRepository.Save(RegionsRepository.Get());
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    public static boolean UpdateRent( RentModel rentModel ) {
+
+        if(rentModel.currentRentLogin.isEmpty())return false;
+        if(rentModel.IsLocked())return false;
+
+        if(ConfigHelper.IsDebug()) {
+            System.out.println(ChatColor.YELLOW + "[RENTTABLE] Выселение    из региона  " + rentModel.region + " игрока " + rentModel.currentRentLogin);
+        }
+        RgClaimHelper.RemoveMember(rentModel.region, rentModel.currentRentLogin);
+        rentModel.currentRentLogin =  "";
+        return  true;
+    }
 
 
     public static void InteractRentTable(Player player, String[] lines) {
@@ -29,35 +68,44 @@ public class SignRentHandle {
             return;
         }
 
+        if(UpdateRent(rentModel)){
+            try {
+                RegionsRepository.Save(RegionsRepository.Get());
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
 
-        player.sendMessage(ChatColor.BOLD + "\n----------------ИНФОРМАЦИЯ О АРЕНДЕ----------\n");
 
-        if (rentModel.IsActual()) {
+        player.sendMessage(ChatColor.BOLD + "----------------ИНФОРМАЦИЯ О АРЕНДЕ----------\n\n");
+
+        if (rentModel.IsLocked()) {
             player.sendMessage(ChatColor.RESET + "Владелец: " + ChatColor.AQUA + rentModel.currentRentLogin);
             player.sendMessage( "Аренда истекает через: "+ DateHelper.calculateDateDifference(new Date(), rentModel.currentRentTo));
         } else {
             player.sendMessage(ChatColor.GREEN + "РЕГИОН СВОБОДЕН ДЛЯ АРЕНДЫ");
         }
 
-        player.sendMessage(ChatColor.RESET + "Цена: " + ChatColor.AQUA + (rentModel.price * 100) + ChatColor.UNDERLINE + " золота в сутки" + ChatColor.GRAY + " \n * В реальные сутки, 24 часа реального времени ");
+        player.sendMessage(ChatColor.RESET + "Цена: " + ChatColor.AQUA + (rentModel.price *  ConfigHelper.GetConfig().getInt("valute-view-coficient", 1)) + ChatColor.RESET+ " " + VaultHelper.ValuteName()+" в сутки" );
+        player.sendMessage( ChatColor.GRAY + " * В реальные сутки, 24 часа реального времени. ");
 
 
-        Material itemMaterial = Material.GOLD_INGOT;
+        Material itemMaterial = VaultHelper.ValuteId();
 
         if (player.getItemInHand().getType() != itemMaterial) {
-            if (!rentModel.IsActual()) {
-                player.sendMessage(ChatColor.GRAY + "Для  аренды возьмите в руки золото и кликнете по табличке  ");
+            if (!rentModel.IsLocked()) {
+                player.sendMessage(ChatColor.GRAY + "Для  аренды возьмите в руки "+VaultHelper.ValuteName()+" и кликнете по табличке  ");
                 return;
             }
 
-            if (rentModel.IsActual() && rentModel.currentRentLogin.equalsIgnoreCase(player.getDisplayName())) {
-                player.sendMessage(ChatColor.GRAY + "Для продления аренды возьмите в руки золото и кликнете по табличке  ");
+            if (rentModel.IsLocked() && rentModel.currentRentLogin.equalsIgnoreCase(player.getDisplayName())) {
+                player.sendMessage(ChatColor.GRAY + "Для продления аренды возьмите в руки "+VaultHelper.ValuteName()+" и кликнете по табличке  ");
                 return;
             }
             return;
         }
 
-        if (rentModel.IsActual() && !rentModel.currentRentLogin.equalsIgnoreCase(player.getDisplayName())) {
+        if (rentModel.IsLocked() && !rentModel.currentRentLogin.equalsIgnoreCase(player.getDisplayName())) {
             player.sendMessage(ChatColor.RED + "Вы не можете арендовать уже занятый дом!");
             return;
         }
@@ -65,67 +113,38 @@ public class SignRentHandle {
 
         int _count = VaultHelper.getGoldIngotCount(player);
         if (_count < rentModel.price) {
-            player.sendMessage("Не хватает золота у вас: " + _count);
+            player.sendMessage("У вас не хватает "+VaultHelper.ValuteName()+". Сейчас у вас " + _count + " из  " + rentModel.price);
             return;
         }
-        player.sendMessage("У вас золота: " + _count);
+
         VaultHelper.takeGoldIngots(player, rentModel.price);
-        player.sendMessage("Тепрерь у вас золота: " + VaultHelper.getGoldIngotCount(player));
 
 
         Calendar calendar = Calendar.getInstance();
         calendar.setTime(new Date());
 
         //Если я продляюсь
-        if (rentModel.IsActual() && rentModel.currentRentLogin.equalsIgnoreCase(player.getDisplayName())) {
+        if (rentModel.IsLocked() && rentModel.currentRentLogin.equalsIgnoreCase(player.getDisplayName())) {
             calendar.setTime(    rentModel.currentRentTo );
+        }else {
+            RgClaimHelper.AddMember(rentModel.region, player.getDisplayName());
         }
 
-        calendar.add(Calendar.SECOND, 12); // Добавляем 10 секунд
+        calendar.add(Calendar.SECOND, ConfigHelper.GetConfig().getInt("rent-duration")); // Добавляем 10 секунд
         rentModel.currentRentLogin = player.getDisplayName();
         rentModel.currentRentTo = calendar.getTime();
+
+
+        try {
+            RegionsRepository.Save(RegionsRepository.Get());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
 
         player.sendMessage(ChatColor.GREEN + "----- Вы арендовали этот дом! " + " \n Аренда истекает через: "+ DateHelper.calculateDateDifference(new Date(), rentModel.currentRentTo));
 
     }
-
-/*
-    public static void InteractRentTableOld(Player player, String[] lines) {
-
-        // Ваш код для обработки события
-        String arg0 = lines[1]; // получение значения Arg0
-        // Выполнение нужных действий
-        player.sendMessage("Вы нажали на табличку с текстом [RENT] " + arg0);
-
-        int _need = 0;
-
-        try {
-            String _s = lines[1].replace("золота/час", "").trim();
-            _need = Integer.parseInt(_s);
-        } catch (NumberFormatException e) {
-            player.sendMessage("Не удалось считать сумму таблички");
-            System.out.println("Неверный формат числа");
-            return;
-        }
-
-        _need /= 100;
-
-
-        int _count = VaultHelper.getGoldIngotCount(player);
-        if (_count < _need) {
-            player.sendMessage("Не хватает золота у вас: " + _count);
-            return;
-        }
-        player.sendMessage("У вас золота: " + _count);
-        VaultHelper.takeGoldIngots(player, _need);
-        player.sendMessage("Тепрерь у вас золота: " + VaultHelper.getGoldIngotCount(player));
-
-
-        player.sendMessage(ChatColor.BOLD + "\n----------------ИНФОРМАЦИЯ О АРЕНДЕ----------");
-        player.sendMessage(ChatColor.RESET + "Арендодатель: " + ChatColor.AQUA + "Гильдия");
-        player.sendMessage(ChatColor.RESET + "Стоимость аренды: " + ChatColor.AQUA + (_need * 100) + ChatColor.UNDERLINE + " золота в сутки" + ChatColor.GRAY + " (В реальные сутки, 24 часа) ");
-        player.sendMessage(ChatColor.RESET + "Для аренды нажмите на команду " + ChatColor.GREEN + "/rent id");
-    }*/
 
 
     public static void ListCommand(CommandSender sender) {
@@ -136,7 +155,7 @@ public class SignRentHandle {
             RentModel map = regions.get(i);
 
             String msg = "";
-            if(map.IsActual()) {
+            if(map.IsLocked()) {
                 msg+= ChatColor.RED +  "[Занято] ";
             }else {
                 msg+= ChatColor.GRAY +  "[СВОБОДНО] ";
@@ -144,7 +163,7 @@ public class SignRentHandle {
 
             msg+=ChatColor.RESET +map.region+  ChatColor.RESET +" цена "+ map.price+ ChatColor.GRAY;
 
-            if(map.IsActual()) {
+            if(map.IsLocked()) {
               msg+=" Владелец: " + ChatColor.GREEN + map.currentRentLogin + " \n Истекает через: "+ DateHelper.calculateDateDifference(new Date(), map.currentRentTo);
             }
             sender.sendMessage(msg);

@@ -1,10 +1,12 @@
 package org.destplay.renttable.repositories;
 
+import com.google.gson.Gson;
+import org.destplay.renttable.ConfigHelper;
 import org.destplay.renttable.contracts.RentModel;
 
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 //import org.json.simple;
 
@@ -31,40 +33,54 @@ public class RegionsRepository {
     }
 
 
-    public static boolean Save(List<RentModel> list) {
-        myList = list;/*
-        try {
-           /jsonConfiguration.set("rents", myList);
-            jsonConfiguration.save(file);
-            return true;
-        } catch (IOException e) {
-            e.printStackTrace();
-        }*/
+    public static boolean Save(List<RentModel> list)  throws IOException{
+        myList = list;
+
+         Gson gson = new Gson();
+        System.out.println(file.getAbsolutePath());
+
+        file.getParentFile().mkdir();
+        file.createNewFile();
+        Writer writer = new FileWriter(file, false);
+        gson.toJson(myList, writer);
+        writer.flush();
+        writer.close();
+
+
         return true;
     }
+
+    public static void Load() throws IOException  {
+        Gson gson = new Gson();
+
+        if (file.exists()){
+            Reader reader = new FileReader(file);
+            RentModel[] n = gson.fromJson(reader, RentModel[].class);
+            myList = new ArrayList<>(Arrays.asList(n));
+        }
+    }
+
 
     public static void Init(File dataFoolder) {
 
         if (!dataFoolder.exists()) dataFoolder.mkdirs();
 
 
-        file = new File(dataFoolder, "rents.json");
+        file = new File(dataFoolder, "rents-data.json");
 
-        if (!file.exists()) {
-            try {
-                file.createNewFile();
-
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
+        if(ConfigHelper.IsDebug()) {
+        System.out.println("----- [RENT TABLE] Init.");
         }
 
-       // List<RentModel> datas =   (List<RentModel>)jsonConfiguration.getList("rents");
 
-       // ArrayList<RentModel> list = new ArrayList<>( jsonConfiguration.getStringList("rents") );
+        try {
+            Load();
+        } catch (IOException e) {
 
-       // myList = new ArrayList<>( (ArrayList<RentModel>) list;
+            System.out.println("----- [RENT TABLE] Ошибка загрузки rents-data.json возможно файл повережден");
+            e.printStackTrace();
+        }
 
-        //myList = (List<RentModel>) myList1;
+
     }
 }

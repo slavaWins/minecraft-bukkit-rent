@@ -13,7 +13,7 @@ public class RentModel {
      * Актуальна ли аренда сейчас?
      * @return
      */
-    public boolean IsActual(){
+    public boolean IsLocked(){
         Date currentDate = new Date();
         return currentRentTo.compareTo(currentDate) > 0;
     }

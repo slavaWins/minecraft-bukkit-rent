@@ -1,11 +1,6 @@
 package org.destplay.renttable.helpers;
 
-import org.bukkit.Material;
-import org.bukkit.entity.Player;
-import org.bukkit.inventory.ItemStack;
-
 import java.util.Date;
-import java.util.HashMap;
 
 public class DateHelper {
     public static String calculateDateDifference(Date startDate, Date endDate) {
@@ -19,6 +14,21 @@ public class DateHelper {
         minutes %= 60;
         hours %= 24;
 
-        return days + " Дней " + hours + " часа " + minutes + " мин " + seconds + " сек";
+        StringBuilder result = new StringBuilder();
+
+        if (days > 0) {
+            result.append(days).append(" Дней ");
+        }
+        if (hours > 0) {
+            result.append(hours).append(" часа ");
+        }
+        if (minutes > 0) {
+            result.append(minutes).append(" мин ");
+        }
+        if (seconds > 0) {
+            result.append(seconds).append(" сек ");
+        }
+
+        return result.toString();
     }
 }
