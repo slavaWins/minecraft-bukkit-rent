@@ -1,0 +1,8 @@
+name: RentTable
+version: '${project.version}'
+main: org.destplay.renttable.RentTable
+api-version: '1.16'
+commands:
+  rnt:
+    description:     TestCom1
+    usage: /<command>
