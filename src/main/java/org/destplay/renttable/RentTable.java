@@ -5,6 +5,7 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.destplay.renttable.contracts.RentModel;
+import org.destplay.renttable.handles.SignRentHandle;
 import org.destplay.renttable.listeners.ExampleListener;
 import org.destplay.renttable.listeners.SignListener;
 import org.destplay.renttable.repositories.RegionsRepository;
@@ -16,6 +17,7 @@ public final class RentTable extends JavaPlugin {
     @Override
     public void onEnable() {
         ConfigHelper.Init(getDataFolder());
+        RegionsRepository.Init(getDataFolder());
         getServer().getPluginManager().registerEvents(new ExampleListener(), this);
         getServer().getPluginManager().registerEvents(new SignListener(), this);
     }
@@ -47,12 +49,9 @@ public final class RentTable extends JavaPlugin {
 
 
         if (args[0].equalsIgnoreCase("list")) {
-            List<RentModel> regions = RegionsRepository.Get();
-            sender.sendMessage("[RentTable] Зарегано регионов: "+regions.size());
-            for (int i = 0; i < regions.size(); i++) {
-                RentModel map = regions.get(i);
-                sender.sendMessage(ChatColor.GREEN +map.region+  ChatColor.RESET +" цена "+ map.price+ ChatColor.GRAY+ ". Владелец: "+  ChatColor.GREEN + map.currentRentLogin);
-            }
+
+            SignRentHandle.ListCommand(sender);
+
             return true;
         }
 

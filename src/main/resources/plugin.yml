@@ -6,3 +6,6 @@ commands:
   rnt:
     description:     TestCom1
     usage: /<command>
+  rnt list:
+    description:     Список аренд
+    usage: /<command>
