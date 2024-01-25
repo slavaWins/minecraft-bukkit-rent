@@ -3,9 +3,12 @@ version: '${project.version}'
 main: org.destplay.renttable.RentTable
 api-version: '1.16'
 commands:
-  rnt:
+  rent:
     description:     TestCom1
     usage: /<command>
-  rnt list:
-    description:     Список аренд
+  rent list:
+    description:     Список моих аренд
+    usage: /<command>
+  rent all:
+    description:     Список всех аренд для op
     usage: /<command>

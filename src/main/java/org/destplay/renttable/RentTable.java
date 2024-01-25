@@ -35,15 +35,23 @@ public final class RentTable extends JavaPlugin {
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
 
-        if (!command.getName().equalsIgnoreCase("rnt")) return false;
+        if (!command.getName().equalsIgnoreCase("rent")) return false;
 
-        if (!sender.isOp()) {
-            sender.sendMessage("Не хватает прав для выполнения команды");
+
+
+        if (args.length == 0) {
+            sender.sendMessage("[RentTable] Нужен аргумент команды например /rent list что бы посмотреть свои аренды");
             return true;
         }
 
-        if (args.length == 0) {
-            sender.sendMessage("[RentTable] Нужен аргумент команды");
+        if (args[0].equalsIgnoreCase("list")) {
+            SignRentHandle.ListCommand(sender, sender.getName());
+            return true;
+        }
+
+
+        if (!sender.isOp()) {
+            sender.sendMessage("Не хватает прав для выполнения команды");
             return true;
         }
 
@@ -60,7 +68,7 @@ public final class RentTable extends JavaPlugin {
 
         if (args[0].equalsIgnoreCase("list")) {
 
-            SignRentHandle.ListCommand(sender);
+            SignRentHandle.ListCommand(sender,"");
 
             return true;
         }

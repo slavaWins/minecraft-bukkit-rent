@@ -19,11 +19,10 @@ import java.util.List;
 public class SignRentHandle {
 
 
+    public static void UpdateRentsAll() {
 
-    public static void UpdateRentsAll( ) {
 
-
-        if(ConfigHelper.IsDebug()) {
+        if (ConfigHelper.IsDebug()) {
             System.out.println(ChatColor.YELLOW + "[RENTTABLE] Запущенно выселение просроченых аренды");
         }
 
@@ -42,17 +41,17 @@ public class SignRentHandle {
         }
     }
 
-    public static boolean UpdateRent( RentModel rentModel ) {
+    public static boolean UpdateRent(RentModel rentModel) {
 
-        if(rentModel.currentRentLogin.isEmpty())return false;
-        if(rentModel.IsLocked())return false;
+        if (rentModel.currentRentLogin.isEmpty()) return false;
+        if (rentModel.IsLocked()) return false;
 
-        if(ConfigHelper.IsDebug()) {
+        if (ConfigHelper.IsDebug()) {
             System.out.println(ChatColor.YELLOW + "[RENTTABLE] Выселение    из региона  " + rentModel.region + " игрока " + rentModel.currentRentLogin);
         }
         RgClaimHelper.RemoveMember(rentModel.region, rentModel.currentRentLogin);
-        rentModel.currentRentLogin =  "";
-        return  true;
+        rentModel.currentRentLogin = "";
+        return true;
     }
 
 
@@ -68,7 +67,7 @@ public class SignRentHandle {
             return;
         }
 
-        if(UpdateRent(rentModel)){
+        if (UpdateRent(rentModel)) {
             try {
                 RegionsRepository.Save(RegionsRepository.Get());
             } catch (IOException e) {
@@ -81,25 +80,25 @@ public class SignRentHandle {
 
         if (rentModel.IsLocked()) {
             player.sendMessage(ChatColor.RESET + "Владелец: " + ChatColor.AQUA + rentModel.currentRentLogin);
-            player.sendMessage( "Аренда истекает через: "+ DateHelper.calculateDateDifference(new Date(), rentModel.currentRentTo));
+            player.sendMessage("Аренда истекает через: " + DateHelper.calculateDateDifference(new Date(), rentModel.currentRentTo));
         } else {
             player.sendMessage(ChatColor.GREEN + "РЕГИОН СВОБОДЕН ДЛЯ АРЕНДЫ");
         }
 
-        player.sendMessage(ChatColor.RESET + "Цена: " + ChatColor.AQUA + (rentModel.price *  ConfigHelper.GetConfig().getInt("valute-view-coficient", 1)) + ChatColor.RESET+ " " + VaultHelper.ValuteName()+" в сутки" );
-        player.sendMessage( ChatColor.GRAY + " * В реальные сутки, 24 часа реального времени. ");
+        player.sendMessage(ChatColor.RESET + "Цена: " + ChatColor.AQUA + (rentModel.price * ConfigHelper.GetConfig().getInt("valute-view-coficient", 1)) + ChatColor.RESET + " " + VaultHelper.ValuteName() + " в сутки");
+        player.sendMessage(ChatColor.GRAY + " * В реальные сутки, 24 часа реального времени. ");
 
 
         Material itemMaterial = VaultHelper.ValuteId();
 
         if (player.getItemInHand().getType() != itemMaterial) {
             if (!rentModel.IsLocked()) {
-                player.sendMessage(ChatColor.GRAY + "Для  аренды возьмите в руки "+VaultHelper.ValuteName()+" и кликнете по табличке  ");
+                player.sendMessage(ChatColor.GRAY + "Для  аренды возьмите в руки " + VaultHelper.ValuteName() + " и кликнете по табличке  ");
                 return;
             }
 
             if (rentModel.IsLocked() && rentModel.currentRentLogin.equalsIgnoreCase(player.getDisplayName())) {
-                player.sendMessage(ChatColor.GRAY + "Для продления аренды возьмите в руки "+VaultHelper.ValuteName()+" и кликнете по табличке  ");
+                player.sendMessage(ChatColor.GRAY + "Для продления аренды возьмите в руки " + VaultHelper.ValuteName() + " и кликнете по табличке  ");
                 return;
             }
             return;
@@ -113,7 +112,7 @@ public class SignRentHandle {
 
         int _count = VaultHelper.getGoldIngotCount(player);
         if (_count < rentModel.price) {
-            player.sendMessage("У вас не хватает "+VaultHelper.ValuteName()+". Сейчас у вас " + _count + " из  " + rentModel.price);
+            player.sendMessage("У вас не хватает " + VaultHelper.ValuteName() + ". Сейчас у вас " + _count + " из  " + rentModel.price);
             return;
         }
 
@@ -125,8 +124,8 @@ public class SignRentHandle {
 
         //Если я продляюсь
         if (rentModel.IsLocked() && rentModel.currentRentLogin.equalsIgnoreCase(player.getDisplayName())) {
-            calendar.setTime(    rentModel.currentRentTo );
-        }else {
+            calendar.setTime(rentModel.currentRentTo);
+        } else {
             RgClaimHelper.AddMember(rentModel.region, player.getDisplayName());
         }
 
@@ -142,30 +141,42 @@ public class SignRentHandle {
         }
 
 
-        player.sendMessage(ChatColor.GREEN + "----- Вы арендовали этот дом! " + " \n Аренда истекает через: "+ DateHelper.calculateDateDifference(new Date(), rentModel.currentRentTo));
+        player.sendMessage(ChatColor.GREEN + "----- Вы арендовали этот дом! " + " \n Аренда истекает через: " + DateHelper.calculateDateDifference(new Date(), rentModel.currentRentTo));
 
     }
 
 
-    public static void ListCommand(CommandSender sender) {
+    public static void ListCommand(CommandSender sender, String login) {
 
         List<RentModel> regions = RegionsRepository.Get();
-        sender.sendMessage("[RentTable] Зарегано регионов: "+regions.size());
+
+        if (login.isEmpty()) {
+            sender.sendMessage("[RentTable] Все зареганные аренды на серве: " + regions.size()+" шт.");
+        }else {
+            sender.sendMessage("[RentTable] Ваши аренды: " );
+        }
+
         for (int i = 0; i < regions.size(); i++) {
             RentModel map = regions.get(i);
 
+            if (!login.isEmpty()) {
+                if (!map.currentRentLogin.equalsIgnoreCase(login)) continue;
+            }
+
             String msg = "";
-            if(map.IsLocked()) {
-                msg+= ChatColor.RED +  "[Занято] ";
-            }else {
-                msg+= ChatColor.GRAY +  "[СВОБОДНО] ";
+            if (map.IsLocked()) {
+                msg += ChatColor.RED + "[Занято] ";
+            } else {
+                msg += ChatColor.GRAY + "[СВОБОДНО] ";
             }
 
-            msg+=ChatColor.RESET +map.region+  ChatColor.RESET +" цена "+ map.price+ ChatColor.GRAY;
+            msg += ChatColor.RESET + map.region + ChatColor.RESET + " цена " + map.price + ChatColor.GRAY;
 
-            if(map.IsLocked()) {
-              msg+=" Владелец: " + ChatColor.GREEN + map.currentRentLogin + " \n Истекает через: "+ DateHelper.calculateDateDifference(new Date(), map.currentRentTo);
+            if (map.IsLocked()) {
+                msg += " Владелец: " + ChatColor.GREEN + map.currentRentLogin + " \n Истекает через: " + DateHelper.calculateDateDifference(new Date(), map.currentRentTo);
             }
+
+
             sender.sendMessage(msg);
         }
 
