@@ -9,10 +9,9 @@ import org.bukkit.entity.Player;
 import org.destplay.renttable.ConfigHelper;
 import org.destplay.renttable.contracts.RentModel;
 import org.destplay.renttable.helpers.ChatHelper;
-import org.destplay.renttable.helpers.DateHelper;
 import org.destplay.renttable.repositories.RegionsRepository;
+import org.destplay.renttable.views.RentChatView;
 
-import java.util.Date;
 import java.util.List;
 
 public class CommandsHandle {
@@ -43,6 +42,8 @@ public class CommandsHandle {
 
     public static void ListCommand(CommandSender sender, String login) {
 
+        ChatHelper.CoppyCmd((Player) sender, "GAVNO");
+
         List<RentModel> regions = RegionsRepository.Get();
 
         if (login.isEmpty()) {
@@ -58,6 +59,8 @@ public class CommandsHandle {
                 if (!map.currentRentLogin.equalsIgnoreCase(login)) continue;
             }
 
+            RentChatView.ElementList((Player) sender, map);
+/*
             String msg = "";
             if (map.IsLocked()) {
                 msg += ChatColor.RED + "[Занято] ";
@@ -72,7 +75,7 @@ public class CommandsHandle {
             }
 
 
-            sender.sendMessage(msg);
+            sender.sendMessage(msg);*/
         }
 
     }
