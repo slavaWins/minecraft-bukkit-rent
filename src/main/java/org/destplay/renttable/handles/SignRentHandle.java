@@ -1,11 +1,10 @@
 package org.destplay.renttable.handles;
 
-import org.bukkit.ChatColor;
-import org.bukkit.Material;
-import org.bukkit.command.CommandSender;
+import org.bukkit.*;
 import org.bukkit.entity.Player;
 import org.destplay.renttable.ConfigHelper;
 import org.destplay.renttable.contracts.RentModel;
+import org.destplay.renttable.helpers.ChatHelper;
 import org.destplay.renttable.helpers.DateHelper;
 import org.destplay.renttable.helpers.RgClaimHelper;
 import org.destplay.renttable.helpers.VaultHelper;
@@ -14,7 +13,6 @@ import org.destplay.renttable.repositories.RegionsRepository;
 import java.io.IOException;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.List;
 
 public class SignRentHandle {
 
@@ -23,7 +21,7 @@ public class SignRentHandle {
 
 
         if (ConfigHelper.IsDebug()) {
-            System.out.println(ChatColor.YELLOW + "[RENTTABLE] Запущенно выселение просроченых аренды");
+            System.out.println(ChatColor.YELLOW + ChatHelper.PREFIX + " Запущенно выселение просроченых аренды");
         }
 
         boolean isUpdated = false;
@@ -47,7 +45,7 @@ public class SignRentHandle {
         if (rentModel.IsLocked()) return false;
 
         if (ConfigHelper.IsDebug()) {
-            System.out.println(ChatColor.YELLOW + "[RENTTABLE] Выселение    из региона  " + rentModel.region + " игрока " + rentModel.currentRentLogin);
+            System.out.println(ChatColor.YELLOW + ChatHelper.PREFIX + " Выселение    из региона  " + rentModel.region + " игрока " + rentModel.currentRentLogin);
         }
         RgClaimHelper.RemoveMember(rentModel.region, rentModel.currentRentLogin);
         rentModel.currentRentLogin = "";
@@ -90,6 +88,7 @@ public class SignRentHandle {
 
 
         Material itemMaterial = VaultHelper.ValuteId();
+
 
         if (player.getItemInHand().getType() != itemMaterial) {
             if (!rentModel.IsLocked()) {
@@ -146,39 +145,4 @@ public class SignRentHandle {
     }
 
 
-    public static void ListCommand(CommandSender sender, String login) {
-
-        List<RentModel> regions = RegionsRepository.Get();
-
-        if (login.isEmpty()) {
-            sender.sendMessage("[RentTable] Все зареганные аренды на серве: " + regions.size()+" шт.");
-        }else {
-            sender.sendMessage("[RentTable] Ваши аренды: " );
-        }
-
-        for (int i = 0; i < regions.size(); i++) {
-            RentModel map = regions.get(i);
-
-            if (!login.isEmpty()) {
-                if (!map.currentRentLogin.equalsIgnoreCase(login)) continue;
-            }
-
-            String msg = "";
-            if (map.IsLocked()) {
-                msg += ChatColor.RED + "[Занято] ";
-            } else {
-                msg += ChatColor.GRAY + "[СВОБОДНО] ";
-            }
-
-            msg += ChatColor.RESET + map.region + ChatColor.RESET + " цена " + map.price + ChatColor.GRAY;
-
-            if (map.IsLocked()) {
-                msg += " Владелец: " + ChatColor.GREEN + map.currentRentLogin + " \n Истекает через: " + DateHelper.calculateDateDifference(new Date(), map.currentRentTo);
-            }
-
-
-            sender.sendMessage(msg);
-        }
-
-    }
 }

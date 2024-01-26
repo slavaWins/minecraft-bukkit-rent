@@ -1,11 +1,14 @@
 package org.destplay.renttable.handles;
 
 import org.bukkit.ChatColor;
+import org.bukkit.Location;
 import org.bukkit.block.Sign;
 import org.bukkit.entity.Player;
 import org.bukkit.event.block.SignChangeEvent;
 import org.destplay.renttable.ConfigHelper;
 import org.destplay.renttable.contracts.RentModel;
+import org.destplay.renttable.helpers.ChatHelper;
+import org.destplay.renttable.helpers.RgClaimHelper;
 import org.destplay.renttable.helpers.VaultHelper;
 import org.destplay.renttable.repositories.RegionsRepository;
 
@@ -13,12 +16,53 @@ import java.io.IOException;
 import java.util.Date;
 import java.util.List;
 
-public class SignCreateHandle {
+public class SignRegisterHandle {
 
 
-    public static void CreateRentTable(Player player, String[] lines, SignChangeEvent signChangeEvent)  {
+    public static void UnRegister(Player player, String[] lines, Sign sign) {
+        if (!player.isOp()) {
+            player.sendMessage(ChatHelper.PREFIX + "Не хватает прав");
+            return;
+        }
+        if (ConfigHelper.IsDebug()) System.out.println(ChatHelper.PREFIX + " Удаление таблички аренды");
+
+        String regionName = lines[2];
+
+        RentModel rent = RegionsRepository.FindByRegion(regionName);
+
+        if (rent == null) {
+            player.sendMessage(ChatHelper.PREFIX + "Не найдена аренда этой таблички");
+        }
+
+        List<RentModel> regions = RegionsRepository.Get();
+
+        regions.remove(rent);
+
+        try {
+            RegionsRepository.Save(regions);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        player.sendMessage(ChatHelper.PREFIX + "Аренда успешно удалена");
+
+    }
+
+    public static void Register(Player player, String[] lines, SignChangeEvent signChangeEvent)  {
+
+
+        if (!player.isOp()) {
+            player.sendMessage("Не хватает прав");
+            return;
+        }
 
         Sign sign = (Sign) signChangeEvent.getBlock().getState();
+
+        if(ConfigHelper.IsDebug()) {
+            System.out.println(ChatColor.YELLOW + ChatHelper.PREFIX + " Создание таблички");
+        }
+        Location blockLocation =  signChangeEvent.getBlock().getLocation();
+
+
 
         if (lines.length < 3) {
             player.sendMessage("В табличке должно быть указано [RENT] \n 10 \n RegionName");
@@ -55,6 +99,11 @@ public class SignCreateHandle {
         reg.region = lines[2];
         reg.price = amountGolds;
         reg.currentRentTo =  new Date();
+        reg.x =     blockLocation.getBlockX();
+        reg.y =     blockLocation.getBlockY();
+        reg.z =     blockLocation.getBlockZ();
+        reg.world =     signChangeEvent.getBlock().getWorld().getName();
+
         regions.add(reg);
 
         try {
@@ -63,6 +112,8 @@ public class SignCreateHandle {
             e.printStackTrace();
         }
 
+
+        RgClaimHelper.FixToRent(reg.region);
 
 
 

@@ -12,3 +12,6 @@ commands:
   rent all:
     description:     Список всех аренд для op
     usage: /<command>
+  rent tp:
+    description:     Список всех аренд для op
+    usage: /<command> <regionname>

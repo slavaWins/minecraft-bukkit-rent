@@ -2,9 +2,12 @@ package org.destplay.renttable;
 
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
+import org.destplay.renttable.handles.CommandsHandle;
 import org.destplay.renttable.handles.SignRentHandle;
+import org.destplay.renttable.helpers.ChatHelper;
 import org.destplay.renttable.listeners.SignListener;
 import org.destplay.renttable.repositories.RegionsRepository;
 
@@ -40,13 +43,14 @@ public final class RentTable extends JavaPlugin {
 
 
         if (args.length == 0) {
-            sender.sendMessage("[RentTable] Нужен аргумент команды например /rent list что бы посмотреть свои аренды");
+            sender.sendMessage(ChatHelper.PREFIX + " Нужен аргумент команды например /rent list что бы посмотреть свои аренды");
             return true;
         }
-
-        if (args[0].equalsIgnoreCase("list")) {
-            SignRentHandle.ListCommand(sender, sender.getName());
-            return true;
+        if ((sender instanceof Player)) {
+            if (args[0].equalsIgnoreCase("list")) {
+                CommandsHandle.ListCommand(sender, sender.getName());
+                return true;
+            }
         }
 
 
@@ -60,15 +64,23 @@ public final class RentTable extends JavaPlugin {
             ConfigHelper.Init(getDataFolder());
             reloadConfig();
             saveConfig();
-            sender.sendMessage("[RentTable] Конфигурация была перезагружена!");
+            sender.sendMessage(ChatHelper.PREFIX + " Конфигурация была перезагружена!");
 
             return true;
         }
 
 
-        if (args[0].equalsIgnoreCase("list")) {
+        if (args[0].equalsIgnoreCase("all")) {
 
-            SignRentHandle.ListCommand(sender,"");
+            CommandsHandle.ListCommand(sender,"");
+
+            return true;
+        }
+
+
+        if (args[0].equalsIgnoreCase("tp") && args.length == 2) {
+
+            CommandsHandle.TpTo(sender, args[1]);
 
             return true;
         }

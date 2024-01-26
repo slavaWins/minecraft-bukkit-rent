@@ -6,6 +6,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.destplay.renttable.ConfigHelper;
+import org.destplay.renttable.helpers.ChatHelper;
 
 public final class ExampleListener implements Listener {
 
@@ -23,7 +24,7 @@ public final class ExampleListener implements Listener {
 
         Player player = e.getPlayer();
 
-        player.sendMessage("[RentTable] Block damage Player " + player.getDisplayName());
+        player.sendMessage(ChatHelper.PREFIX + " Block damage Player " + player.getDisplayName());
 
     }
 

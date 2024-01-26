@@ -8,6 +8,10 @@ public class RentModel {
     public String currentRentLogin;
     public String region;
     public Date currentRentTo;
+    public double  x;
+    public double  y;
+    public double  z;
+    public String world;
 
     /**
      * Актуальна ли аренда сейчас?
